@@ -1,4 +1,4 @@
-# An weather cli tool
+# A weather cli tool
 To get weather current state and forcast of 7 days
 **it works with with lat lon to get data**
 
@@ -6,7 +6,6 @@ To get weather current state and forcast of 7 days
 Easy as F
 ### Get
 either get the built binary or build it
-### Build
 **Get the repo and install dependencies**
 ```
 git clone https://github.com/magichrist/weather_cli
