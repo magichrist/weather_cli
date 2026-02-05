@@ -1,0 +1,22 @@
+[package]
+name = "weather_cli"
+version = "0.2.0"
+edition = "2024"
+
+[dependencies]
+prompts="0.1.0"
+tokio = {version = "1.47.1",features = ["full"]}
+reqwest = {version = "0.12.23",features = ["json"]}
+serde = {version = "*",features = ["derive"]}
+colored = "3.0.0"
+tracing = "0.1.44"
+tracing-subscriber = {version = "0.3.22",features = ["env-filter","fmt"]}
+clap = {version = "4.5.53",features = ["derive"]}
+textplots = "0.8.7"
+dirs = {git = "https://github.com/dirs-dev/dirs-rs", version = "6.0.0"}
+serde_json = {git="https://github.com/serde-rs/json"}
+
+[profile.release]
+opt-level = "z"
+debug = false
+lto = true
