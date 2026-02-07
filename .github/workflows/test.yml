@@ -39,8 +39,8 @@ jobs:
         run: |
           mkdir dist
           cp target/${{matrix.target}}/release/weather_cli dist/weather_cli-${{matrix.suffix}}
+          strip dist/weather_cli-${{matrix.suffix}}
 
-      - run: strip target/${{matrix.target}}/release/weather_cli-${{matrix.suffix}}
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
