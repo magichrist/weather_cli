@@ -16,12 +16,6 @@ pub struct CacheEntry<T> {
 
 type WeatherCache = HashMap<String, CacheEntry<ReturnedData>>;
 
-enum CachePolicy {
-    CacheHit(WeatherCache),
-    CacheExpired(WeatherCache),
-    CacheMiss(WeatherCache),
-}
-
 pub fn cache_path() -> PathBuf {
     let mut p = cache_dir().expect("no cache dir");
     p.push("weather_cli");
@@ -70,5 +64,5 @@ pub fn insert_save(key: String, data: ReturnedData, cache_file: &mut WeatherCach
             data,
         },
     );
-    save_cache(&cache_file);
+    save_cache(cache_file);
 }

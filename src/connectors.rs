@@ -1,6 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::response_layouts::{Location, WeatherDaily, WeatherResponse};
-use reqwest;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Debug, Clone, Deserialize)]
 pub enum ReturnedData {
@@ -11,13 +10,25 @@ pub enum ReturnedData {
 
 impl ReturnedData {
     pub fn daily(&self) -> Option<&WeatherDaily> {
-        if let Self::Daily(daily) = self {Some(daily)}else {None}
+        if let Self::Daily(daily) = self {
+            Some(daily)
+        } else {
+            None
+        }
     }
     pub fn current(&self) -> Option<&WeatherResponse> {
-        if let Self::Current(current) = self {Some(current)}else {None}
+        if let Self::Current(current) = self {
+            Some(current)
+        } else {
+            None
+        }
     }
     pub fn mlocation(&self) -> Option<&Location> {
-        if let Self::MLocation(location) = self {Some(location)}else {None}
+        if let Self::MLocation(location) = self {
+            Some(location)
+        } else {
+            None
+        }
     }
 }
 
@@ -45,5 +56,9 @@ pub async fn fetch(api_hook: String) -> Result<ReturnedData, Box<dyn std::error:
     }
 
     // If neither worked, return a proper error
-    Err(format!("Failed to parse response as WeatherResponse or WeatherDaily: {}", res).into())
+    Err(format!(
+        "Failed to parse response as WeatherResponse or WeatherDaily: {}",
+        res
+    )
+    .into())
 }

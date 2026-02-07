@@ -19,7 +19,6 @@ pub fn depict_forecast(data: &WeatherDaily) {
         .display();
 }
 
-
 pub fn pretty_print_forecast(weather: &WeatherDaily) {
     println!(
         "{:<12} {:<10} {:<10} {:<10} {:<10} {:<10} {:<10} {:<10}",
@@ -49,7 +48,6 @@ pub fn pretty_print_forecast(weather: &WeatherDaily) {
 }
 
 // Current
-
 
 pub fn pretty_print_weather(data: &WeatherResponse) {
     println!("{}", "🌍 Weather Data:".green());

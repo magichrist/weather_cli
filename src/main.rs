@@ -5,7 +5,7 @@ mod response_layouts;
 
 use crate::cache::{insert_save, is_valid, load_cache};
 #[allow(unused)]
-use crate::connectors::{fetch, transform_url, ReturnedData};
+use crate::connectors::{ReturnedData, fetch, transform_url};
 use crate::depictors::{depict_forecast, pretty_print_forecast, pretty_print_weather};
 use clap::Parser;
 use colored::Colorize;
@@ -31,9 +31,8 @@ struct Args {
     ml: bool,
 
     /// Clear Cache
-    #[arg(short='c',long="clear_cache")]
+    #[arg(short = 'c', long = "clear_cache")]
     clear_cache: bool,
-
 
     /// Interactive mode
     #[arg(short = 'i', long = "interactive")]
@@ -63,7 +62,7 @@ async fn main() {
         args.interactive,
         args.forecast
     );
-    if !args.interactive && !args.a.is_none() && !args.b.is_none() {
+    if !args.interactive && args.a.is_some() && args.b.is_some() {
         let data = format!("{} {}", args.a.unwrap(), args.b.unwrap());
         calc_and_fetch(data).await;
     } else if args.interactive {
@@ -91,25 +90,32 @@ async fn main() {
             }
         }
     } else if args.ml && !args.interactive && args.b.is_none() && args.a.is_none() {
-        let mut cache_file =load_cache();
-        if let Some(cache_hit) = cache_file.get(&"ml".to_string()) {
+        let mut cache_file = load_cache();
+        if let Some(cache_hit) = cache_file.get("ml") {
             if is_valid(cache_hit) {
-                let loc=cache_hit.data.mlocation().unwrap();
+                let loc = cache_hit.data.mlocation().unwrap();
                 calc_and_fetch(format!("{} {}", loc.lat, loc.lon)).await;
                 return;
             }
         }
-        let mylocation = fetch("http://ip-api.com/json?fields=lat,lon".to_string()).await.unwrap();
+        let mylocation = fetch("http://ip-api.com/json?fields=lat,lon".to_string())
+            .await
+            .unwrap();
         insert_save("ml".to_string(), mylocation.clone(), &mut cache_file);
-        calc_and_fetch(format!("{} {}", mylocation.mlocation().unwrap().lat,mylocation.mlocation().unwrap().lon )).await;
-
+        calc_and_fetch(format!(
+            "{} {}",
+            mylocation.mlocation().unwrap().lat,
+            mylocation.mlocation().unwrap().lon
+        ))
+        .await;
     } else if args.clear_cache {
         cache::clear_cache();
-    }
-    else {
+    } else {
         exit(1);
     }
 }
+
+#[allow(clippy::collapsible_if, clippy::collapsible_else_if)]
 async fn calc_and_fetch(data: String) {
     debug!("lat_lon transformation");
     let lat_lon: Vec<f32> = data
@@ -132,32 +138,32 @@ async fn calc_and_fetch(data: String) {
         if Args::parse().forecast {
             let mut api_hook:String="https://api.open-meteo.com/v1/forecast?latitude=LAT&longitude=LON&daily=uv_index_max,snowfall_sum,showers_sum,rain_sum,shortwave_radiation_sum,temperature_2m_mean,wind_speed_10m_max&timezone=GMT".into();
             api_hook = transform_url(&api_hook, &lat_lon);
-            let key=format!("{}forecast",lat_lon_string);
+            let key = format!("{}forecast", lat_lon_string);
             if let Some(entry) = cache_file.get(&key) {
                 if is_valid(entry) {
                     let cache_hit = entry.data.daily().unwrap();
-                    pretty_print_forecast(&cache_hit);
-                    depict_forecast(&cache_hit);
+                    pretty_print_forecast(cache_hit);
+                    depict_forecast(cache_hit);
                 }
             }
-            let fetched_data= fetch(api_hook).await.unwrap();
-            pretty_print_forecast(&fetched_data.daily().unwrap());
-            cache::insert_save(key,fetched_data.clone(),&mut cache_file);
-            depict_forecast(&fetched_data.daily().unwrap());
+            let fetched_data = fetch(api_hook).await.unwrap();
+            pretty_print_forecast(fetched_data.daily().unwrap());
+            cache::insert_save(key, fetched_data.clone(), &mut cache_file);
+            depict_forecast(fetched_data.daily().unwrap());
         } else {
             let mut api_hook:String = "https://api.open-meteo.com/v1/forecast?latitude=LAT&longitude=LON&current=temperature_2m,wind_speed_10m,rain,snowfall,precipitation".into();
             api_hook = transform_url(&api_hook, &lat_lon);
-            let key=format!("{}current",lat_lon_string);
+            let key = format!("{}current", lat_lon_string);
             if let Some(entry) = cache_file.get(&key) {
                 if is_valid(entry) {
                     let cache_hit = entry.data.current().unwrap();
-                    pretty_print_weather(&cache_hit);
+                    pretty_print_weather(cache_hit);
                     return;
                 }
             }
-            let fetched_data= fetch(api_hook).await.unwrap();
-            cache::insert_save(key,fetched_data.clone(),&mut cache_file);
-            pretty_print_weather(&fetched_data.current().unwrap());
+            let fetched_data = fetch(api_hook).await.unwrap();
+            insert_save(key, fetched_data.clone(), &mut cache_file);
+            pretty_print_weather(fetched_data.current().unwrap());
         }
     }
 }

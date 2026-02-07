@@ -1,0 +1,48 @@
+name: Rust Test and Release
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - main
+    paths:
+      - '**.rs'
+
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  MainTest:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unkown-linux-ngu
+            suffix: linux-x86_64
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            suffix: macos-aarch64
+
+    runs-on: ${{matrix.os}}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{matrix.target}}
+      - uses: Swatinem/rust-cache@v2
+      - name: Cargo Build
+        run: cargo build --release --verbose --target ${{matrix.target}}
+      - name: Cargo Test
+        run: cargo test --verbose
+      - name: Prep Binary
+        shell: bash
+        run: |
+          mkdir dist
+          cp target/${{matrix.target}}/release/weather_cli dist/weather_cli-${{matrix.suffix}}
+
+      - run: strip target/${{matrix.target}}/release/*
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files:
+            dist/*

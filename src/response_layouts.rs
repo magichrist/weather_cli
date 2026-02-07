@@ -71,8 +71,8 @@ pub struct Current {
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Location {
-    pub lat:f64,
-    pub lon:f64,
+    pub lat: f64,
+    pub lon: f64,
 }
 
 // #[allow(dead_code)]

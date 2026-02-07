@@ -13,9 +13,8 @@ tracing = "0.1.44"
 tracing-subscriber = {version = "0.3.22",features = ["env-filter","fmt"]}
 clap = {version = "4.5.53",features = ["derive"]}
 textplots = "0.8.7"
-dirs = {git = "https://github.com/dirs-dev/dirs-rs", version = "6.0.0"}
-serde_json = {git="https://github.com/serde-rs/json"}
-
+dirs = {version = "6.0.0"}
+serde_json = "1.0.148"
 [profile.release]
 opt-level = "z"
 debug = false
