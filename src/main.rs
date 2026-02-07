@@ -145,6 +145,7 @@ async fn calc_and_fetch(data: String) {
                     let cache_hit = entry.data.daily().unwrap();
                     pretty_print_forecast(cache_hit);
                     depict_forecast(cache_hit);
+                    return;
                 }
             }
             let fetched_data = fetch(api_hook).await.unwrap();
