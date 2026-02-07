@@ -49,6 +49,7 @@ enum BadInput {
     LatNotInRange,
     LonNotInRange,
 }
+#[allow(clippy::collapsible_if)]
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt()
