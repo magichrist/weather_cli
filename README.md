@@ -5,12 +5,19 @@ To get weather current state and forcast of 7 days
 ## Build
 Easy as F
 ### Get
-either get the built binary or build it
+Either get the built binary or build it
+
+#### Get from homebrew
+```
+brew tap magichrist/tap
+brew install weather_cli
+```
+
+#### Build
 **Get the repo and install dependencies**
 ```
 git clone https://github.com/magichrist/weather_cli
 cd weather_cli
-cargo run 
 ```
 **build it**
 ```
