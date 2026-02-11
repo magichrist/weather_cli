@@ -29,9 +29,21 @@ jobs:
           targets: ${{matrix.target}}
       - uses: Swatinem/rust-cache@v2
       - name: Cargo Build
+        id: build
         run: cargo build --release --target ${{matrix.target}}
+      - name: Disseminate Status to webhook
+        run: >
+          curl -X POST -H 'Content-type: application/json'
+          --data '{"text":"Build ran: ${{steps.build.outcome}}"}'
+          ${{secrets.WEBHOOK_URL}}
       - name: Cargo Test
+        id: test
         run: cargo test --verbose
+      - name: Disseminate Status to webhook
+        run: >
+          curl -X POST -H 'Content-type: application/json'
+          --data '{"text":"Test ran: ${{steps.test.outcome}}"}'
+          ${{secrets.WEBHOOK_URL}}
       - name: Prep Binary
         shell: bash
         run: |
@@ -40,7 +52,13 @@ jobs:
           strip dist/weather_cli-${{matrix.suffix}}
 
       - name: Create Release
+        id: release
         uses: softprops/action-gh-release@v2
         with:
           files:
             dist/*
+      - name: Disseminate Status to webhook
+        run: >
+          curl -X POST -H 'Content-type: application/json'
+          --data '{"text":"Release for ${{matrix.target}} ran: ${{steps.release.outcome}}"}'
+          ${{secrets.WEBHOOK_URL}}
