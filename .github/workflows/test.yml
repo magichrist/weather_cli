@@ -34,7 +34,7 @@ jobs:
       - name: Disseminate Status to webhook
         run: >
           curl -X POST -H 'Content-type: application/json'
-          --data '{"text":"Build ran: ${{steps.build.outcome}}"}'
+          --data '{"text":"🏗️ Build ran: ${{steps.build.outcome}}"}'
           ${{secrets.WEBHOOK_URL}}
       - name: Cargo Test
         id: test
@@ -42,7 +42,7 @@ jobs:
       - name: Disseminate Status to webhook
         run: >
           curl -X POST -H 'Content-type: application/json'
-          --data '{"text":"Test ran: ${{steps.test.outcome}}"}'
+          --data '{"text":"🧪 Test ran: ${{steps.test.outcome}}"}'
           ${{secrets.WEBHOOK_URL}}
       - name: Prep Binary
         shell: bash
@@ -60,5 +60,5 @@ jobs:
       - name: Disseminate Status to webhook
         run: >
           curl -X POST -H 'Content-type: application/json'
-          --data '{"text":"Release for ${{matrix.target}} ran: ${{steps.release.outcome}}"}'
+          --data '{"text":"🔂 Release for ${{matrix.suffix}} ran: ${{steps.release.outcome}}"}'
           ${{secrets.WEBHOOK_URL}}
