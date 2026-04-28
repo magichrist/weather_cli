@@ -12,6 +12,7 @@ use colored::Colorize;
 use prompts::Prompt;
 use prompts::text::TextPrompt;
 use std::process::exit;
+use std::string::ToString;
 use tracing::debug;
 use tracing_subscriber::EnvFilter;
 
@@ -52,6 +53,7 @@ enum BadInput {
 #[allow(clippy::collapsible_if)]
 #[tokio::main]
 async fn main() {
+    let ip_url: String = "http://ip-api.com/json?fields=lat,lon".to_string();
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::from_default_env())
         .init();
@@ -67,29 +69,7 @@ async fn main() {
         let data = format!("{} {}", args.a.unwrap(), args.b.unwrap());
         calc_and_fetch(data).await;
     } else if args.interactive {
-        loop {
-            let mut prompt = TextPrompt::new("$ ");
-            match prompt.run().await {
-                Ok(Some(data)) => {
-                    debug!("Raw Data: {:?}", data);
-                    if data == "q" {
-                        break;
-                    } else if data == "help" {
-                        println!("{}", "LAT then LON".green());
-                        println!("Like: ");
-                        println!("{}", "1.2 2.3".bright_red());
-                    } else if data.trim().is_empty() {
-                        println!("{} {}", "Wrong Input: ".green(), data);
-                    } else {
-                        calc_and_fetch(data).await;
-                    }
-                }
-                other => {
-                    println!("exiting {:?}", other);
-                    break;
-                }
-            }
-        }
+        interactive_loop().await;
     } else if args.ml && !args.interactive && args.b.is_none() && args.a.is_none() {
         let mut cache_file = load_cache();
         if let Some(cache_hit) = cache_file.get("ml") {
@@ -99,9 +79,7 @@ async fn main() {
                 return;
             }
         }
-        let mylocation = fetch("http://ip-api.com/json?fields=lat,lon".to_string())
-            .await
-            .unwrap();
+        let mylocation = fetch(ip_url.clone()).await.unwrap();
         insert_save("ml".to_string(), mylocation.clone(), &mut cache_file);
         calc_and_fetch(format!(
             "{} {}",
@@ -123,7 +101,7 @@ async fn calc_and_fetch(data: String) {
         .split_whitespace()
         .filter_map(|x| x.parse::<f32>().ok())
         .collect();
-    let mut cache_file = cache::load_cache();
+    let mut cache_file = load_cache();
     if lat_lon.len() < 2 {
         return;
     }
@@ -150,7 +128,7 @@ async fn calc_and_fetch(data: String) {
             }
             let fetched_data = fetch(api_hook).await.unwrap();
             pretty_print_forecast(fetched_data.daily().unwrap());
-            cache::insert_save(key, fetched_data.clone(), &mut cache_file);
+            insert_save(key, fetched_data.clone(), &mut cache_file);
             depict_forecast(fetched_data.daily().unwrap());
         } else {
             let mut api_hook:String = "https://api.open-meteo.com/v1/forecast?latitude=LAT&longitude=LON&current=temperature_2m,wind_speed_10m,rain,snowfall,precipitation".into();
@@ -166,6 +144,32 @@ async fn calc_and_fetch(data: String) {
             let fetched_data = fetch(api_hook).await.unwrap();
             insert_save(key, fetched_data.clone(), &mut cache_file);
             pretty_print_weather(fetched_data.current().unwrap());
+        }
+    }
+}
+
+async fn interactive_loop() {
+    loop {
+        let mut prompt = TextPrompt::new("$ ");
+        match prompt.run().await {
+            Ok(Some(data)) => {
+                debug!("Raw Data: {:?}", data);
+                if data == "q" {
+                    break;
+                } else if data == "help" {
+                    println!("{}", "LAT then LON".green());
+                    println!("Like: ");
+                    println!("{}", "1.2 2.3".bright_red());
+                } else if data.trim().is_empty() {
+                    println!("{} {}", "Wrong Input: ".green(), data);
+                } else {
+                    calc_and_fetch(data).await;
+                }
+            }
+            other => {
+                println!("exiting {:?}", other);
+                break;
+            }
         }
     }
 }

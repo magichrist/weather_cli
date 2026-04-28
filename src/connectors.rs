@@ -3,9 +3,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Debug, Clone, Deserialize)]
 pub enum ReturnedData {
-    Daily(WeatherDaily),
-    Current(WeatherResponse),
-    MLocation(Location),
+    Daily(Box<WeatherDaily>),
+    Current(Box<WeatherResponse>),
+    MLocation(Box<Location>),
 }
 
 impl ReturnedData {
@@ -43,16 +43,16 @@ pub async fn fetch(api_hook: String) -> Result<ReturnedData, Box<dyn std::error:
 
     // Try parsing as Current first
     if let Ok(current) = serde_json::from_str::<WeatherResponse>(&res) {
-        return Ok(ReturnedData::Current(current));
+        return Ok(ReturnedData::Current(Box::from(current)));
     }
 
     // Then try Daily
     if let Ok(daily) = serde_json::from_str::<WeatherDaily>(&res) {
-        return Ok(ReturnedData::Daily(daily));
+        return Ok(ReturnedData::Daily(Box::from(daily)));
     }
 
     if let Ok(location) = serde_json::from_str::<Location>(&res) {
-        return Ok(ReturnedData::MLocation(location));
+        return Ok(ReturnedData::MLocation(Box::from(location)));
     }
 
     // If neither worked, return a proper error
