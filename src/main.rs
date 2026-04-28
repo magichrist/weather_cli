@@ -147,7 +147,7 @@ async fn calc_and_fetch(data: String) {
                     return;
                 }
             }
-            let fetched_data = fetch(api_hook).await.unwrap();
+            let fetched_data = fetch(api_hook).await.expect("url is unreachable");
             insert_save(key, fetched_data.clone(), &mut cache_file);
             pretty_print_weather(fetched_data.current().unwrap());
         }

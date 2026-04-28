@@ -52,16 +52,16 @@ pub fn transform_url(api_hook: &str, lat_lon: &[f32]) -> String {
 pub async fn fetch(api_hook: String) -> Result<ReturnedData, Box<dyn std::error::Error>> {
     let res = reqwest::get(&api_hook).await?.text().await?;
 
-    /// Try parsing as Current
+    // Try parsing as Current
     if let Ok(current) = serde_json::from_str::<WeatherResponse>(&res) {
         return Ok(ReturnedData::Current(Box::from(current)));
     }
 
-    /// Try parsing as Daily
+    // Try parsing as Daily
     if let Ok(daily) = serde_json::from_str::<WeatherDaily>(&res) {
         return Ok(ReturnedData::Daily(Box::from(daily)));
     }
-    /// Try parsing as Location
+    // Try parsing as Location
     if let Ok(location) = serde_json::from_str::<Location>(&res) {
         return Ok(ReturnedData::MLocation(Box::from(location)));
     }
