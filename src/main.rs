@@ -18,6 +18,7 @@ use tracing_subscriber::EnvFilter;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
+/// cli flags and inputs that can be taken
 struct Args {
     /// Lat (must be used with -b)
     #[arg(short, requires = "b", conflicts_with = "interactive")]
@@ -45,9 +46,13 @@ struct Args {
 }
 #[allow(dead_code)]
 #[derive(Debug)]
+/// Incorrect Input Enum
 enum BadInput {
+    /// Input.len() is NOT 2 (lat and lon).
     MoreThanTwo,
+    /// Input lat is NOT between -90 and +90.
     LatNotInRange,
+    /// Input lon is NOT between -180 and +180.
     LonNotInRange,
 }
 #[allow(clippy::collapsible_if)]
@@ -95,6 +100,7 @@ async fn main() {
 }
 
 #[allow(clippy::collapsible_if, clippy::collapsible_else_if)]
+/// Takes the input and does safety checks on it then sends corresponding request.
 async fn calc_and_fetch(data: String) {
     debug!("lat_lon transformation");
     let lat_lon: Vec<f32> = data
@@ -148,6 +154,7 @@ async fn calc_and_fetch(data: String) {
     }
 }
 
+/// When -i or --interactive is passed, initiates a loop.
 async fn interactive_loop() {
     loop {
         let mut prompt = TextPrompt::new("$ ");

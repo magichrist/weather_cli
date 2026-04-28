@@ -2,6 +2,7 @@ use crate::response_layouts::{WeatherDaily, WeatherResponse};
 use colored::Colorize;
 use textplots::{Chart, Plot, Shape};
 
+/// Used for daily data type, returns Forecast data: plot.
 pub fn depict_forecast(data: &WeatherDaily) {
     let temp_points: Vec<(f32, f32)> = data
         .daily
@@ -19,6 +20,7 @@ pub fn depict_forecast(data: &WeatherDaily) {
         .display();
 }
 
+/// Forecast in Chart
 pub fn pretty_print_forecast(weather: &WeatherDaily) {
     println!(
         "{:<12} {:<10} {:<10} {:<10} {:<10} {:<10} {:<10} {:<10}",
@@ -48,7 +50,7 @@ pub fn pretty_print_forecast(weather: &WeatherDaily) {
 }
 
 // Current
-
+/// Used for current data type, displays current state of weather
 pub fn pretty_print_weather(data: &WeatherResponse) {
     println!("{}", "🌍 Weather Data:".green());
     println!("Location: {}, {}", data.latitude, data.longitude);
