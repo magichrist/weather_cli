@@ -1,9 +1,9 @@
 use crate::response_layouts::{Location, WeatherDaily, WeatherResponse};
-use rattles::presets::prelude as presets;
 use serde::{Deserialize, Serialize};
 use std::io::Write;
 use std::time::Duration;
 
+use rattles::presets::prelude as presets;
 #[derive(Serialize, Debug, Clone, Deserialize)]
 /// Expected Data Type from Requests from weather endpoints.
 pub enum ReturnedData {
