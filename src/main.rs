@@ -132,7 +132,7 @@ async fn calc_and_fetch(data: String) {
                     return;
                 }
             }
-            let fetched_data = fetch(api_hook).await.unwrap();
+            let fetched_data = fetch(api_hook).await.expect("Unable to access hook url");
             pretty_print_forecast(fetched_data.daily().unwrap());
             insert_save(key, fetched_data.clone(), &mut cache_file);
             depict_forecast(fetched_data.daily().unwrap());

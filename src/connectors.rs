@@ -1,5 +1,8 @@
 use crate::response_layouts::{Location, WeatherDaily, WeatherResponse};
+use rattles::presets::prelude as presets;
 use serde::{Deserialize, Serialize};
+use std::io::Write;
+use std::time::Duration;
 
 #[derive(Serialize, Debug, Clone, Deserialize)]
 /// Expected Data Type from Requests from weather endpoints.
@@ -50,8 +53,17 @@ pub fn transform_url(api_hook: &str, lat_lon: &[f32]) -> String {
 
 /// Will act and call the structured url.
 pub async fn fetch(api_hook: String) -> Result<ReturnedData, Box<dyn std::error::Error>> {
-    let res = reqwest::get(&api_hook).await?.text().await?;
+    let rattle = presets::rain();
 
+    let request = tokio::spawn(async move { reqwest::get(&api_hook).await?.text().await });
+
+    while !request.is_finished() {
+        print!("\r{} Fetching... ", rattle.current_frame());
+        std::io::stdout().flush().unwrap();
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+
+    let res = request.await??;
     // Try parsing as Current
     if let Ok(current) = serde_json::from_str::<WeatherResponse>(&res) {
         return Ok(ReturnedData::Current(Box::from(current)));
