@@ -2,7 +2,7 @@ use crate::response_layouts::{Location, WeatherDaily, WeatherResponse};
 use serde::{Deserialize, Serialize};
 use std::io::Write;
 use std::time::Duration;
-
+use colored::Colorize;
 use rattles::presets::prelude as presets;
 #[derive(Serialize, Debug, Clone, Deserialize)]
 /// Expected Data Type from Requests from weather endpoints.
@@ -52,13 +52,13 @@ pub fn transform_url(api_hook: &str, lat_lon: &[f32]) -> String {
 }
 
 /// Will act and call the structured url.
-pub async fn fetch(api_hook: String) -> Result<ReturnedData, Box<dyn std::error::Error>> {
+pub async fn fetch(api_hook: String, msg: &str) -> Result<ReturnedData, Box<dyn std::error::Error>> {
     let rattle = presets::rain();
 
     let request = tokio::spawn(async move { reqwest::get(&api_hook).await?.text().await });
 
     while !request.is_finished() {
-        print!("\r{} Fetching... ", rattle.current_frame());
+        print!("\r{} {msg}          ", rattle.current_frame().bright_blue());
         std::io::stdout().flush().unwrap();
         tokio::time::sleep(Duration::from_millis(20)).await;
     }
