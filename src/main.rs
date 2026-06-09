@@ -114,7 +114,7 @@ async fn calc_and_fetch(data: String) {
     let lat_lon_string = format!("{}_{}", lat_lon[0], lat_lon[1]);
     debug!("Transformed: {:?}", lat_lon);
     if lat_lon.len() != 2 {
-        println!("{} {}", "Wrong Input: ", data);
+        println!("Wrong Input: {}", data);
     } else if lat_lon[0] < -90.0 || lat_lon[0] > 90.0 {
         println!("{:?}", BadInput::LatNotInRange);
     } else if lat_lon[1] < -180.0 || lat_lon[1] > 180.0 {
@@ -132,7 +132,9 @@ async fn calc_and_fetch(data: String) {
                     return;
                 }
             }
-            let fetched_data = fetch(api_hook, "Forecasting").await.expect("Unable to access hook url");
+            let fetched_data = fetch(api_hook, "Forecasting")
+                .await
+                .expect("Unable to access hook url");
             pretty_print_forecast(fetched_data.daily().unwrap());
             insert_save(key, fetched_data.clone(), &mut cache_file);
             depict_forecast(fetched_data.daily().unwrap());
@@ -147,7 +149,9 @@ async fn calc_and_fetch(data: String) {
                     return;
                 }
             }
-            let fetched_data = fetch(api_hook, "Getting Current State").await.expect("url is unreachable");
+            let fetched_data = fetch(api_hook, "Getting Current State")
+                .await
+                .expect("url is unreachable");
             insert_save(key, fetched_data.clone(), &mut cache_file);
             pretty_print_weather(fetched_data.current().unwrap());
         }

@@ -1,9 +1,9 @@
 use crate::response_layouts::{Location, WeatherDaily, WeatherResponse};
+use colored::Colorize;
+use rattles::presets::prelude as presets;
 use serde::{Deserialize, Serialize};
 use std::io::Write;
 use std::time::Duration;
-use colored::Colorize;
-use rattles::presets::prelude as presets;
 #[derive(Serialize, Debug, Clone, Deserialize)]
 /// Expected Data Type from Requests from weather endpoints.
 pub enum ReturnedData {
@@ -47,12 +47,15 @@ impl ReturnedData {
 /// Will struct url using given user inputs
 pub fn transform_url(api_hook: &str, lat_lon: &[f32]) -> String {
     let mut api_hook = api_hook.replace("LAT", &lat_lon[0].to_string());
-    api_hook = api_hook.replace("LON", &lat_lon[1].to_string());
+    api_hook = api_hook.as_str().replace("LON", &lat_lon[1].to_string());
     api_hook
 }
 
 /// Will act and call the structured url.
-pub async fn fetch(api_hook: String, msg: &str) -> Result<ReturnedData, Box<dyn std::error::Error>> {
+pub async fn fetch(
+    api_hook: String,
+    msg: &str,
+) -> Result<ReturnedData, Box<dyn std::error::Error>> {
     let rattle = presets::rain();
 
     let request = tokio::spawn(async move { reqwest::get(&api_hook).await?.text().await });
