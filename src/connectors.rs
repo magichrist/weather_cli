@@ -17,7 +17,7 @@ pub enum ReturnedData {
 
 impl ReturnedData {
     /// Convert and return data to daily
-    pub fn daily(&self) -> Option<&WeatherDaily> {
+    pub fn daily(&self) -> Option<&Box<WeatherDaily>> {
         if let Self::Daily(daily) = self {
             Some(daily)
         } else {
@@ -26,7 +26,7 @@ impl ReturnedData {
     }
 
     /// Convert and return data to current
-    pub fn current(&self) -> Option<&WeatherResponse> {
+    pub fn current(&self) -> Option<&Box<WeatherResponse>> {
         if let Self::Current(current) = self {
             Some(current)
         } else {
@@ -35,7 +35,7 @@ impl ReturnedData {
     }
 
     /// Convert and return data to location
-    pub fn mlocation(&self) -> Option<&Location> {
+    pub fn mlocation(&self) -> Option<&Box<Location>> {
         if let Self::MLocation(location) = self {
             Some(location)
         } else {
@@ -65,7 +65,7 @@ pub async fn fetch(
         std::io::stdout().flush().unwrap();
         tokio::time::sleep(Duration::from_millis(20)).await;
     }
-
+    println!("\r");
     let res = request.await??;
     // Try parsing as Current
     if let Ok(current) = serde_json::from_str::<WeatherResponse>(&res) {

@@ -35,17 +35,38 @@ pub fn pretty_print_forecast(weather: &WeatherDaily) {
     );
 
     for i in 0..weather.daily.time.len() {
-        println!(
-            "{:<12} {:<10.2} {:<10.2} {:<10.2} {:<10.2} {:<10.2} {:<10.2} {:<10.2}",
-            weather.daily.time[i].yellow(),
-            weather.daily.uv_index_max[i],
-            weather.daily.snowfall_sum[i],
-            weather.daily.showers_sum[i],
-            weather.daily.rain_sum[i],
-            weather.daily.shortwave_radiation_sum[i],
-            weather.daily.temperature_2m_mean[i],
-            weather.daily.wind_speed_10m_max[i],
-        );
+        match i % 2 {
+            0 => {
+                let data = format!(
+                    "{:<12} {:<10.2} {:<10.2} {:<10.2} {:<10.2} {:<10.2} {:<10.2} {:<10.2}",
+                    weather.daily.time[i].yellow(),
+                    weather.daily.uv_index_max[i],
+                    weather.daily.snowfall_sum[i],
+                    weather.daily.showers_sum[i],
+                    weather.daily.rain_sum[i],
+                    weather.daily.shortwave_radiation_sum[i],
+                    weather.daily.temperature_2m_mean[i],
+                    weather.daily.wind_speed_10m_max[i]
+                )
+                .as_str()
+                .green();
+                println!("{}", data);
+            }
+            _ => {
+                let data = format!(
+                    "{:<12} {:<10.2} {:<10.2} {:<10.2} {:<10.2} {:<10.2} {:<10.2} {:<10.2}",
+                    weather.daily.time[i].yellow(),
+                    weather.daily.uv_index_max[i],
+                    weather.daily.snowfall_sum[i],
+                    weather.daily.showers_sum[i],
+                    weather.daily.rain_sum[i],
+                    weather.daily.shortwave_radiation_sum[i],
+                    weather.daily.temperature_2m_mean[i],
+                    weather.daily.wind_speed_10m_max[i]
+                );
+                println!("{}", data);
+            }
+        }
     }
 }
 
