@@ -50,7 +50,6 @@ jobs:
           mkdir dist
           cp target/${{matrix.target}}/release/weather_cli dist/weather_cli-${{matrix.suffix}}
           strip dist/weather_cli-${{matrix.suffix}}
-          gzip -9 dist/weather_cli-${{matrix.suffix}}
 
       - name: Create Release
         id: release
