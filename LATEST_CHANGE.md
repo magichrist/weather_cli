@@ -2,15 +2,27 @@
 
 All notable changes to this project.
 
-## v0.2.6 - 2026-04-28
+## v0.3.0 - 2026-06-26
 
 
 
-- #eb47d43 better code
+- 2c6c400 added cli-spinner
 
-- #4758bbc docs
+- 911e24a added cli-spinner
 
-- #cc65392 better code
+- e0855bd details for spinner
 
-- #8f3f857 version 0.2.6
+- c0d8a69 fmt
+
+- 03766a9 better ui for forecast
+
+- d983410 Update test.yml
+
+no need to use gunzip
+
+- 0604013 Create codeql.yml
+
+- 9c68d57 version v0.3.0
+
+- ac4019b version v0.3.0
 
