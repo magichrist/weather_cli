@@ -1,3 +1,11 @@
+[![Test&Release](https://github.com/magichrist/weather_cli/actions/workflows/test.yml/badge.svg)](https://github.com/magichrist/weather_cli/actions/workflows/test.yml)
+[![CodeQL](https://github.com/magichrist/weather_cli/actions/workflows/codeql.yml/badge.svg)](https://github.com/magichrist/weather_cli/actions/workflows/codeql.yml)
+<br>
+[![Release](https://img.shields.io/github/v/release/magichrist/weather_cli)](https://github.com/magichrist/weather_cli/releases)
+[![Downloads](https://img.shields.io/github/downloads/magichrist/weather_cli/total)](https://github.com/magichrist/weather_cli/releases)
+[![Rust](https://img.shields.io/badge/Rust-stable-orange?logo=rust)](https://www.rust-lang.org/)
+
+
 # A weather cli tool
 To get weather current state and forcast of 7 days
 **it works with with lat lon to get data**
