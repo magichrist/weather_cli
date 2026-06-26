@@ -1,14 +1,24 @@
-name: "CodeQL"
+name: CodeQL
 
 on:
   push:
     branches:
       - main
       - master
+    paths:
+      - '**/*.rs'
+      - 'Cargo.toml'
+      - '**/Cargo.toml'
+
   pull_request:
     branches:
       - main
       - master
+    paths:
+      - '**/*.rs'
+      - 'Cargo.toml'
+      - '**/Cargo.toml'
+
   schedule:
     - cron: '0 3 * * 0'
 
