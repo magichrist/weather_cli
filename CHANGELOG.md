@@ -2,7 +2,7 @@
 
 All notable changes to this project.
 
-## v0.3.0 - 2026-06-25
+## v0.3.0 - 2026-06-26
 
 
 
@@ -21,6 +21,8 @@ All notable changes to this project.
 no need to use gunzip
 
 - #0604013 Create codeql.yml
+
+- #9c68d57 version v0.3.0
 
 ## v0.2.6 - 2026-04-28
 
