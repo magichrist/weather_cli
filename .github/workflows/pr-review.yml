@@ -1,0 +1,48 @@
+name: PR Review Gate
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  contents: read
+
+jobs:
+  approval:
+    name: Await Maintainer Approval
+    runs-on: ubuntu-latest
+
+    environment:
+      name: pr-review
+      url: ${{ github.event.pull_request.html_url }}
+
+    steps:
+      - name: Approved
+        run: |
+          echo "Maintainer approved this PR."
+
+  ci:
+    name: Build
+    needs: approval
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cargo Test
+        id: test
+        run: cargo test --verbose
+
+      - uses: Swatinem/rust-cache@v2
+      - name: Cargo Build
+        id: build
+        run: cargo build --release --target x86_64-unknown-linux-gnu
+
+      - name: Run weather_cli Test
+        id: run_test
+        run: |
+          cp target/x86_64-unknown-linux-gnu/release/weather_cli .
+          RUST_LOG=trace ./weather_cli -f --ml
