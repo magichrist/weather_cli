@@ -1,4 +1,5 @@
 name: Rust Test and Release
+
 on:
   push:
     tags: ['v*']
@@ -8,6 +9,7 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+
 jobs:
   MainTest:
     strategy:
@@ -21,45 +23,54 @@ jobs:
             target: aarch64-apple-darwin
             suffix: macos-aarch64
 
-    runs-on: ${{matrix.os}}
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{matrix.target}}
+          targets: ${{ matrix.target }}
+          components: clippy, rustfmt
       - uses: Swatinem/rust-cache@v2
+
+      - name: Formatting
+        run: cargo fmt --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
       - name: Cargo Build
         id: build
-        run: cargo build --release --target ${{matrix.target}}
+        run: cargo build --release --target ${{ matrix.target }}
       - name: Disseminate Status to webhook
         run: >
           curl -X POST -H 'Content-type: application/json'
-          --data '{"text":"Build ran: ${{steps.build.outcome}}"}'
-          ${{secrets.WEBHOOK_URL}}
+          --data '{"text":"Build ran: ${{ steps.build.outcome }}"}'
+          ${{ secrets.WEBHOOK_URL }}
+
       - name: Cargo Test
         id: test
         run: cargo test --verbose
       - name: Disseminate Status to webhook
         run: >
           curl -X POST -H 'Content-type: application/json'
-          --data '{"text":"Test ran: ${{steps.test.outcome}}"}'
-          ${{secrets.WEBHOOK_URL}}
+          --data '{"text":"Test ran: ${{ steps.test.outcome }}"}'
+          ${{ secrets.WEBHOOK_URL }}
+
       - name: Prep Binary
         shell: bash
         run: |
           mkdir dist
-          cp target/${{matrix.target}}/release/weather_cli dist/weather_cli-${{matrix.suffix}}
-          strip dist/weather_cli-${{matrix.suffix}}
+          cp target/${{ matrix.target }}/release/weather_cli dist/weather_cli-${{ matrix.suffix }}
+          strip dist/weather_cli-${{ matrix.suffix }}
 
       - name: Create Release
         id: release
         uses: softprops/action-gh-release@v2
         with:
           body_path: LATEST_CHANGE.md
-          files:
-            dist/*
+          files: dist/*
       - name: Disseminate Status to webhook
         run: >
           curl -X POST -H 'Content-type: application/json'
-          --data '{"text":"Release for ${{matrix.target}} ran: ${{steps.release.outcome}}"}'
-          ${{secrets.WEBHOOK_URL}}
+          --data '{"text":"Release ran: ${{ steps.release.outcome }}"}'
+          ${{ secrets.WEBHOOK_URL }}

@@ -32,17 +32,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Formatting
+        run: cargo fmt --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
       - name: Cargo Test
-        id: test
         run: cargo test --verbose
 
-      - uses: Swatinem/rust-cache@v2
       - name: Cargo Build
-        id: build
         run: cargo build --release --target x86_64-unknown-linux-gnu
 
-      - name: Run weather_cli Test
-        id: run_test
+      - name: Smoke Test
         run: |
           cp target/x86_64-unknown-linux-gnu/release/weather_cli .
           RUST_LOG=trace ./weather_cli -f --ml
