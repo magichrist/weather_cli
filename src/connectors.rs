@@ -17,7 +17,7 @@ pub enum ReturnedData {
 
 impl ReturnedData {
     /// Convert and return data to daily
-    pub fn daily(&self) -> Option<&Box<WeatherDaily>> {
+    pub fn daily(&self) -> Option<&WeatherDaily> {
         if let Self::Daily(daily) = self {
             Some(daily)
         } else {
@@ -26,7 +26,7 @@ impl ReturnedData {
     }
 
     /// Convert and return data to current
-    pub fn current(&self) -> Option<&Box<WeatherResponse>> {
+    pub fn current(&self) -> Option<&WeatherResponse> {
         if let Self::Current(current) = self {
             Some(current)
         } else {
@@ -35,7 +35,7 @@ impl ReturnedData {
     }
 
     /// Convert and return data to location
-    pub fn mlocation(&self) -> Option<&Box<Location>> {
+    pub fn mlocation(&self) -> Option<&Location> {
         if let Self::MLocation(location) = self {
             Some(location)
         } else {

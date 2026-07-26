@@ -71,8 +71,10 @@ async fn main() {
         args.forecast
     );
     if !args.interactive && args.a.is_some() && args.b.is_some() {
-        let data = format!("{} {}", args.a.unwrap(), args.b.unwrap());
-        calc_and_fetch(data).await;
+        if let (Some(a), Some(b)) = (args.a, args.b) {
+            let data = format!("{a} {b}");
+            calc_and_fetch(data).await;
+        }
     } else if args.interactive {
         interactive_loop().await;
     } else if args.ml && !args.interactive && args.b.is_none() && args.a.is_none() {
