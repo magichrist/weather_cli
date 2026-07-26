@@ -10,8 +10,16 @@ use tracing::debug;
 /// Fetch and display weather for the given coordinates.
 pub async fn handle_direct(lat: f64, lon: f64, forecast: bool) -> AppResult<()> {
     validate_coords(lat, lon)?;
-
     let mut cache = Cache::load();
+    handle_direct_with_cache(lat, lon, forecast, &mut cache).await
+}
+
+async fn handle_direct_with_cache(
+    lat: f64,
+    lon: f64,
+    forecast: bool,
+    cache: &mut Cache,
+) -> AppResult<()> {
     let cache_key = format!("{lat}_{lon}_{}", mode_suffix(forecast));
 
     if let Some(data) = cache.get_valid(&cache_key) {
@@ -56,7 +64,7 @@ pub async fn handle_my_location(forecast: bool) -> AppResult<()> {
         loc
     };
 
-    handle_direct(loc.lat, loc.lon, forecast).await
+    handle_direct_with_cache(loc.lat, loc.lon, forecast, &mut cache).await
 }
 
 /// Interactive REPL for entering coordinates.
@@ -116,10 +124,10 @@ fn parse_coords(input: &str) -> AppResult<(f64, f64)> {
     }
     let lat: f64 = parts[0]
         .parse()
-        .map_err(|_| AppError::InvalidLatitude { lat: 0.0 })?;
+        .map_err(|_| AppError::Cache(format!("invalid latitude: {}", parts[0])))?;
     let lon: f64 = parts[1]
         .parse()
-        .map_err(|_| AppError::InvalidLongitude { lon: 0.0 })?;
+        .map_err(|_| AppError::Cache(format!("invalid longitude: {}", parts[1])))?;
     validate_coords(lat, lon)?;
     Ok((lat, lon))
 }

@@ -111,47 +111,6 @@ impl ReturnedData {
     }
 }
 
-impl std::fmt::Display for WeatherResponse {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "Location: {}, {}", self.latitude, self.longitude)?;
-        writeln!(
-            f,
-            "Timezone: {} ({})",
-            self.timezone, self.timezone_abbreviation
-        )?;
-        writeln!(f, "Elevation: {} m", self.elevation)?;
-        writeln!(f, "Generated in: {:.2} ms", self.generationtime_ms)?;
-        writeln!(f)?;
-        writeln!(f, "Current Conditions:")?;
-        writeln!(f, "  Time:         {}", self.current.time)?;
-        writeln!(
-            f,
-            "  Temperature:  {} {}",
-            self.current.temperature_2m, self.current_units.temperature_2m
-        )?;
-        writeln!(
-            f,
-            "  Wind Speed:   {} {}",
-            self.current.wind_speed_10m, self.current_units.wind_speed_10m
-        )?;
-        writeln!(
-            f,
-            "  Rain:         {} {}",
-            self.current.rain, self.current_units.rain
-        )?;
-        writeln!(
-            f,
-            "  Snowfall:     {} {}",
-            self.current.snowfall, self.current_units.snowfall
-        )?;
-        writeln!(
-            f,
-            "  Precipitation: {} {}",
-            self.current.precipitation, self.current_units.precipitation
-        )
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
