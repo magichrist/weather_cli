@@ -7,6 +7,15 @@ use std::time::Duration;
 
 const API_BASE: &str = "https://api.open-meteo.com/v1/forecast";
 const IP_API_URL: &str = "http://ip-api.com/json?fields=lat,lon";
+const HTTP_TIMEOUT: Duration = Duration::from_secs(15);
+
+/// Build a shared reqwest client with a timeout.
+fn http_client() -> reqwest::Client {
+    reqwest::Client::builder()
+        .timeout(HTTP_TIMEOUT)
+        .build()
+        .expect("failed to build HTTP client")
+}
 
 /// Build an Open-Meteo API URL with the given query parameters.
 fn build_url(lat: f64, lon: f64, extra: &[(&str, &str)]) -> String {
@@ -25,9 +34,10 @@ fn build_url(lat: f64, lon: f64, extra: &[(&str, &str)]) -> String {
 /// Fetch raw text from a URL with a terminal spinner.
 async fn fetch_raw(url: &str, msg: &str) -> AppResult<String> {
     let rattle = presets::rain();
+    let client = http_client();
     let request = tokio::spawn({
         let url = url.to_string();
-        async move { reqwest::get(&url).await?.text().await }
+        async move { client.get(&url).send().await?.text().await }
     });
 
     while !request.is_finished() {

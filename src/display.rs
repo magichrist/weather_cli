@@ -6,6 +6,10 @@ use textplots::{Chart, Plot, Shape};
 
 /// Display a temperature chart for the forecast period.
 pub fn depict_forecast(data: &WeatherDaily) {
+    if data.daily.time.is_empty() {
+        return;
+    }
+
     let temp_points: Vec<(f32, f32)> = data
         .daily
         .temperature_2m_mean

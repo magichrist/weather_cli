@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
+use tracing::debug;
 
 /// Cache TTL: 300 minutes (18 000 seconds).
 const TTL_SECONDS: u64 = 300 * 60;
@@ -26,10 +27,19 @@ impl Cache {
     /// Load the cache from disk. Returns an empty cache on any I/O or parse error.
     pub fn load() -> Self {
         let path = Self::default_path();
-        let entries = fs::read_to_string(&path)
-            .ok()
-            .and_then(|s| serde_json::from_str(&s).ok())
-            .unwrap_or_default();
+        let entries = match fs::read_to_string(&path) {
+            Ok(s) => match serde_json::from_str(&s) {
+                Ok(entries) => entries,
+                Err(e) => {
+                    debug!("failed to parse cache: {e}");
+                    HashMap::new()
+                }
+            },
+            Err(e) => {
+                debug!("failed to read cache: {e}");
+                HashMap::new()
+            }
+        };
         Self { path, entries }
     }
 
@@ -76,7 +86,9 @@ impl Cache {
 
     fn persist(&self) {
         if let Ok(json) = serde_json::to_string_pretty(&self.entries) {
-            let _ = fs::write(&self.path, json);
+            if let Err(e) = fs::write(&self.path, &json) {
+                debug!("failed to write cache: {e}");
+            }
         }
     }
 
