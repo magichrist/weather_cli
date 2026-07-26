@@ -1,0 +1,203 @@
+{
+  "repo_notes": [
+    {
+      "content": ""
+    }
+  ],
+  "pages": [
+    {
+      "title": "Overview",
+      "purpose": "High-level introduction to weather_cli: what it does, how it works at a glance, key features, and how to navigate the wiki for deeper details.",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Getting Started",
+      "purpose": "Installation instructions (Homebrew tap and building from source), basic usage examples, and a quick-start guide for new users.",
+      "parent": "Overview",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Project History and Versioning",
+      "purpose": "Version history from v0.2.3 to v0.3.0, notable milestones (CLI spinner, forecast UI, automated release, Homebrew distribution), and the project's evolution.",
+      "parent": "Overview",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Architecture Overview",
+      "purpose": "Overview of the modular Rust architecture: how the five source modules (main, connectors, cache, depictors, response_layouts) fit together, the request lifecycle, and key design decisions. Links to child pages for each module.",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "CLI Entry Point and Argument Parsing",
+      "purpose": "Detailed coverage of src/main.rs: the Args struct, all CLI flags (-a/-b, --ml, -i, -f, -c), the main() async function, routing logic, the calc_and_fetch pipeline, and the interactive_loop REPL.",
+      "parent": "Architecture Overview",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "HTTP Connector and Data Fetching",
+      "purpose": "Deep dive into src/connectors.rs: the ReturnedData enum, the fetch() async function, URL template transformation via transform_url(), the tokio-based spinner polling loop, and the sequential deserialization strategy.",
+      "parent": "Architecture Overview",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Response Data Models",
+      "purpose": "Complete reference for src/response_layouts.rs: all serde-derived structs (WeatherResponse, WeatherDaily, Current, Daily, CurrentUnits, DailyUnits, Location), their fields, types, and how they map to the Open-Meteo API JSON schema.",
+      "parent": "Architecture Overview",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Caching System",
+      "purpose": "Full explanation of src/cache.rs: the WeatherCache type alias, CacheEntry<T> struct, TTL_SECONDS constant (300 minutes), cache_path() using the dirs crate, load_cache/save_cache/clear_cache functions, insert_save(), and is_valid() TTL validation logic.",
+      "parent": "Architecture Overview",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Terminal Output and Visualization",
+      "purpose": "Coverage of src/depictors.rs: pretty_print_weather() for current conditions, pretty_print_forecast() for the 7-day tabular view with zebra-striping, depict_forecast() for the ASCII time-temperature chart via textplots, and the colored crate usage.",
+      "parent": "Architecture Overview",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "External API Integration",
+      "purpose": "Overview of the two external APIs used by weather_cli — Open-Meteo for weather data and ip-api.com for geolocation — including endpoint URLs, query parameters, and how responses map to internal data models.",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Open-Meteo Weather API",
+      "purpose": "Details of the Open-Meteo API endpoints used: the current weather endpoint (temperature_2m, wind_speed_10m, rain, snowfall, precipitation) and the 7-day forecast endpoint (uv_index_max, snowfall_sum, showers_sum, rain_sum, shortwave_radiation_sum, temperature_2m_mean, wind_speed_10m_max), including full URL templates with LAT/LON placeholders.",
+      "parent": "External API Integration",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "IP Geolocation (MyLocation Feature)",
+      "purpose": "How the --ml flag works: the ip-api.com endpoint (http://ip-api.com/json?fields=lat,lon), the Location struct, caching of the 'ml' key, and how the resolved coordinates feed back into calc_and_fetch().",
+      "parent": "External API Integration",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Build, Release, and CI/CD",
+      "purpose": "Overview of the tooling and automation infrastructure: the justfile for local builds, GitHub Actions workflows for testing and releasing, and the CodeQL security scanning pipeline.",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Local Build Tooling (justfile)",
+      "purpose": "The justfile recipes: build (cargo build --release), strip (symbol removal with strip -S -x), buildStrip (bs alias), and release (rl alias for Homebrew tap synchronization). Covers the binary optimization profile (opt-level=z, lto=true) from Cargo.toml.",
+      "parent": "Build, Release, and CI/CD",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "GitHub Actions: Test and Release Workflow",
+      "purpose": "Detailed walkthrough of .github/workflows/test.yml: tag-triggered pipeline (v*), the build matrix (ubuntu/linux-x86_64 and macos/aarch64), cargo build, cargo test, binary prep (dist/ directory, strip), softprops/action-gh-release, LATEST_CHANGE.md as release notes, and webhook status dissemination via WEBHOOK_URL secret.",
+      "parent": "Build, Release, and CI/CD",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "GitHub Actions: CodeQL Security Analysis",
+      "purpose": "Coverage of .github/workflows/codeql.yml: triggers (push/PR to main/master, weekly schedule), the Rust CodeQL analysis job, and how it integrates with the project's quality control strategy.",
+      "parent": "Build, Release, and CI/CD",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Dependency Reference",
+      "purpose": "Overview of all crate dependencies declared in Cargo.toml, their roles in the application, and notable feature flags. Links to relevant architecture pages.",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Core Runtime Dependencies",
+      "purpose": "Detailed coverage of tokio (async runtime, full features), reqwest (HTTP client, json feature), serde + serde_json (serialization/deserialization), and clap (CLI argument parsing with derive feature).",
+      "parent": "Dependency Reference",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "UI and Utility Dependencies",
+      "purpose": "Coverage of colored (terminal text styling), textplots (ASCII chart rendering), rattles (CLI spinner/progress animation via presets::rain()), prompts (interactive TextPrompt), dirs (platform cache directory resolution), and tracing + tracing-subscriber (structured logging).",
+      "parent": "Dependency Reference",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Glossary",
+      "purpose": "Definitions of all codebase-specific terms, abbreviations, domain concepts, and Rust patterns used throughout weather_cli. Each entry includes file/function pointers for onboarding engineers.",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    }
+  ]
+}
