@@ -12,6 +12,10 @@ All notable changes to this project.
 
 - d3f411e workflow update
 
+- ce4944c fix(lint): fixed some lints
+
+- 989717f feat(precommit): fmt, betterleaks added
+
 ## v0.3.0 - 2026-06-26
 
 
