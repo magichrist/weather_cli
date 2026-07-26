@@ -80,8 +80,18 @@ src/
 ├── cache.rs     — On-disk cache ($XDG_CACHE_HOME/weather_cli/)
 ├── models.rs    — API response types and serialization
 ├── display.rs   — Terminal output (tables and charts)
-└── error.rs     — Typed error handling with thiserror
+└── error.rs     — Typed error handling (AppError + AppResult)
 ```
+
+## Features
+
+- **Colored output** — terminal-colored labels for weather fields and forecast tables
+- **On-disk cache** — responses cached for 5 hours under `$XDG_CACHE_HOME/weather_cli/`
+- **IP geolocation** — auto-detect location via HTTPS IP lookup (`--ml`)
+- **7-day forecast table** with temperature chart (`textplots`)
+- **Typed errors** — `thiserror`-based `AppError` enum
+- **HTTP timeout** — 15-second timeout prevents infinite hangs on network issues
+- **CI** — GitHub Actions runs `cargo fmt --check`, `cargo clippy -D warnings`, and `cargo test`
 
 ## Development
 
