@@ -2,7 +2,7 @@ use crate::response_layouts::{WeatherDaily, WeatherResponse};
 use colored::Colorize;
 use textplots::{Chart, Plot, Shape};
 
-/// Used for daily data type, returns Forecast data: plot.
+/// Plot a temperature chart for the forecast period.
 pub fn depict_forecast(data: &WeatherDaily) {
     let temp_points: Vec<(f32, f32)> = data
         .daily
@@ -14,13 +14,14 @@ pub fn depict_forecast(data: &WeatherDaily) {
 
     let width = 80;
     let height = 20;
+    let x_max = (data.daily.time.len() as f32) - 1.0;
     println!("{}", "Time-Temp Chart".red());
-    Chart::new(width, height, 0.0, 6.0)
+    Chart::new(width, height, 0.0, x_max)
         .lineplot(&Shape::Steps(&temp_points))
         .display();
 }
 
-/// Forecast in Chart
+/// Print the forecast table.
 pub fn pretty_print_forecast(weather: &WeatherDaily) {
     println!(
         "{:<12} {:<10} {:<10} {:<10} {:<10} {:<10} {:<10} {:<10}",
@@ -34,46 +35,29 @@ pub fn pretty_print_forecast(weather: &WeatherDaily) {
         "Wind km/h".bright_green()
     );
 
-    for i in 0..weather.daily.time.len() {
-        match i % 2 {
-            0 => {
-                let data = format!(
-                    "{:<12} {:<10.2} {:<10.2} {:<10.2} {:<10.2} {:<10.2} {:<10.2} {:<10.2}",
-                    weather.daily.time[i].yellow(),
-                    weather.daily.uv_index_max[i],
-                    weather.daily.snowfall_sum[i],
-                    weather.daily.showers_sum[i],
-                    weather.daily.rain_sum[i],
-                    weather.daily.shortwave_radiation_sum[i],
-                    weather.daily.temperature_2m_mean[i],
-                    weather.daily.wind_speed_10m_max[i]
-                )
-                .as_str()
-                .green();
-                println!("{}", data);
-            }
-            _ => {
-                let data = format!(
-                    "{:<12} {:<10.2} {:<10.2} {:<10.2} {:<10.2} {:<10.2} {:<10.2} {:<10.2}",
-                    weather.daily.time[i].yellow(),
-                    weather.daily.uv_index_max[i],
-                    weather.daily.snowfall_sum[i],
-                    weather.daily.showers_sum[i],
-                    weather.daily.rain_sum[i],
-                    weather.daily.shortwave_radiation_sum[i],
-                    weather.daily.temperature_2m_mean[i],
-                    weather.daily.wind_speed_10m_max[i]
-                );
-                println!("{}", data);
-            }
+    for (i, date) in weather.daily.time.iter().enumerate() {
+        let row = format!(
+            "{:<12} {:<10.2} {:<10.2} {:<10.2} {:<10.2} {:<10.2} {:<10.2} {:<10.2}",
+            date.yellow(),
+            weather.daily.uv_index_max[i],
+            weather.daily.snowfall_sum[i],
+            weather.daily.showers_sum[i],
+            weather.daily.rain_sum[i],
+            weather.daily.shortwave_radiation_sum[i],
+            weather.daily.temperature_2m_mean[i],
+            weather.daily.wind_speed_10m_max[i]
+        );
+        if i % 2 == 0 {
+            println!("{}", row.green());
+        } else {
+            println!("{row}");
         }
     }
 }
 
-// Current
-/// Used for current data type, displays current state of weather
+/// Print current weather conditions.
 pub fn pretty_print_weather(data: &WeatherResponse) {
-    println!("{}", "🌍 Weather Data:".green());
+    println!("{}", "Weather Data:".green());
     println!("Location: {}, {}", data.latitude, data.longitude);
     println!(
         "Timezone: {} ({})",
@@ -82,7 +66,7 @@ pub fn pretty_print_weather(data: &WeatherResponse) {
     println!("Elevation: {} m", data.elevation);
     println!("Generated in: {:.2} ms", data.generationtime_ms);
 
-    println!("{}", "\n🌡️ Current Conditions:".red());
+    println!("{}", "Current Conditions:".red());
     println!("Time: {}", data.current.time);
     println!(
         "Temperature: {} {}",
