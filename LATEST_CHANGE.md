@@ -2,26 +2,31 @@
 
 All notable changes to this project.
 
-## v0.3.0 - 2026-06-26
+## v0.5.0 - 2026-07-28
 
 
 
-- 2c6c400 added cli-spinner
+- 28636ca docs: update README with features section and bug fixes
 
-- 911e24a added cli-spinner
+- d2ba265 feat: city search, enhanced weather, hourly forecast, JSON output, cache fixes
 
-- e0855bd details for spinner
+- City name search via Open-Meteo Geocoding API (-s/--search)
+- Enhanced current weather: humidity, UV index, pressure, feels-like, condition text
+- WMO weather code to human-readable text mapping
+- Hourly forecast (--hourly [DAYS], default 3)
+- JSON output mode (--json) for scripting
+- Fix --json --ml and --ml --hourly (dispatch now resolves coords from any source)
+- Fix --json bypassing cache (now checks and stores cache)
+- 23 tests passing, clippy clean
 
-- c0d8a69 fmt
+- 103e38b fix: --hourly --json now returns JSON; add Rust cache to CodeQL workflow
 
-- 03766a9 better ui for forecast
+- handle_hourly now accepts json flag for JSON output
+- Rust cache added to codeql.yml to avoid recompiling on every run
 
-- d983410 Update test.yml
+- 0b137c6 fix: city search --hourly --json now returns hourly JSON
 
-no need to use gunzip
+- In handle_city_search, check hourly before json to avoid early return
+- Suppress 'Selected:' label when --json is set to keep output clean
 
-- 0604013 Create codeql.yml
-
-- 9c68d57 version v0.3.0
-
-- ac4019b version v0.3.0
+- d9e26fd Version v0.5.0, added many features
