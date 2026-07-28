@@ -1,5 +1,5 @@
 use crate::error::{AppError, AppResult};
-use crate::models::{Location, WeatherDaily, WeatherResponse};
+use crate::models::{CityResult, Location, WeatherDaily, WeatherHourly, WeatherResponse};
 use colored::Colorize;
 use rattles::presets::prelude as presets;
 use std::io::Write;
@@ -57,7 +57,7 @@ pub async fn fetch_current(lat: f64, lon: f64) -> AppResult<WeatherResponse> {
         lon,
         &[(
             "current",
-            "temperature_2m,wind_speed_10m,rain,snowfall,precipitation",
+            "temperature_2m,apparent_temperature,relative_humidity_2m,surface_pressure,wind_speed_10m,uv_index,weather_code,rain,snowfall,precipitation",
         )],
     );
     let json = fetch_raw(&url, "Fetching current weather...").await?;
@@ -84,6 +84,44 @@ pub async fn fetch_forecast(lat: f64, lon: f64) -> AppResult<WeatherDaily> {
 /// Determine the caller's location from their public IP address.
 pub async fn fetch_location() -> AppResult<Location> {
     let json = fetch_raw(IP_API_URL, "Determining location...").await?;
+    serde_json::from_str(&json).map_err(|_| AppError::UnexpectedResponse)
+}
+
+/// Search for cities by name via the Open-Meteo Geocoding API.
+pub async fn search_city(name: &str) -> AppResult<Vec<CityResult>> {
+    let mut url = reqwest::Url::parse("https://geocoding-api.open-meteo.com/v1/search")
+        .expect("invalid geocoding base URL");
+    {
+        let mut q = url.query_pairs_mut();
+        q.append_pair("name", name);
+        q.append_pair("count", "5");
+        q.append_pair("language", "en");
+    }
+    let json = fetch_raw(url.as_str(), "Searching cities...").await?;
+    #[derive(serde::Deserialize)]
+    struct GeocodingResponse {
+        results: Option<Vec<CityResult>>,
+    }
+    let resp: GeocodingResponse =
+        serde_json::from_str(&json).map_err(|_| AppError::UnexpectedResponse)?;
+    Ok(resp.results.unwrap_or_default())
+}
+
+/// Fetch hourly forecast for the given coordinates.
+pub async fn fetch_hourly(lat: f64, lon: f64, days: u32) -> AppResult<WeatherHourly> {
+    let url = build_url(
+        lat,
+        lon,
+        &[
+            (
+                "hourly",
+                "temperature_2m,precipitation_probability,weather_code",
+            ),
+            ("timezone", "GMT"),
+            ("forecast_days", &days.to_string()),
+        ],
+    );
+    let json = fetch_raw(&url, "Fetching hourly forecast...").await?;
     serde_json::from_str(&json).map_err(|_| AppError::UnexpectedResponse)
 }
 

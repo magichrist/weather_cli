@@ -7,6 +7,51 @@ use prompts::Prompt;
 use prompts::text::TextPrompt;
 use tracing::debug;
 
+/// Resolve location from IP, using cache.
+pub async fn resolve_location() -> AppResult<crate::models::Location> {
+    let mut cache = Cache::load();
+    if let Some(data) = cache.get_valid("ml") {
+        if let Some(loc) = data.as_location() {
+            return Ok(loc.clone());
+        }
+    }
+    let loc = api::fetch_location().await?;
+    cache.insert(
+        "ml",
+        crate::models::ReturnedData::Location(Box::new(loc.clone())),
+    );
+    Ok(loc)
+}
+
+/// Fetch and display weather as JSON.
+pub async fn handle_json(lat: f64, lon: f64, forecast: bool) -> AppResult<()> {
+    validate_coords(lat, lon)?;
+    let mut cache = Cache::load();
+    let cache_key = format!("{lat}_{lon}_{}", mode_suffix(forecast));
+
+    if let Some(data) = cache.get_valid(&cache_key) {
+        println!("{}", serde_json::to_string_pretty(data)?);
+        return Ok(());
+    }
+
+    if forecast {
+        let data = api::fetch_forecast(lat, lon).await?;
+        println!("{}", serde_json::to_string_pretty(&data)?);
+        cache.insert(
+            &cache_key,
+            crate::models::ReturnedData::Daily(Box::new(data)),
+        );
+    } else {
+        let data = api::fetch_current(lat, lon).await?;
+        println!("{}", serde_json::to_string_pretty(&data)?);
+        cache.insert(
+            &cache_key,
+            crate::models::ReturnedData::Current(Box::new(data)),
+        );
+    }
+    Ok(())
+}
+
 /// Fetch and display weather for the given coordinates.
 pub async fn handle_direct(lat: f64, lon: f64, forecast: bool) -> AppResult<()> {
     validate_coords(lat, lon)?;
@@ -50,20 +95,8 @@ async fn handle_direct_with_cache(
 
 /// Determine location from IP, then fetch weather.
 pub async fn handle_my_location(forecast: bool) -> AppResult<()> {
+    let loc = resolve_location().await?;
     let mut cache = Cache::load();
-    let loc = if let Some(data) = cache.get_valid("ml") {
-        data.as_location()
-            .cloned()
-            .ok_or(AppError::UnexpectedResponse)?
-    } else {
-        let loc = api::fetch_location().await?;
-        cache.insert(
-            "ml",
-            crate::models::ReturnedData::Location(Box::new(loc.clone())),
-        );
-        loc
-    };
-
     handle_direct_with_cache(loc.lat, loc.lon, forecast, &mut cache).await
 }
 
@@ -102,6 +135,103 @@ pub async fn handle_interactive(forecast: bool) -> AppResult<()> {
         }
     }
 
+    Ok(())
+}
+
+/// Search for a city and fetch weather for the first match.
+pub async fn handle_city_search(
+    city: &str,
+    forecast: bool,
+    hourly: Option<u32>,
+    json: bool,
+) -> AppResult<()> {
+    let results = api::search_city(city).await?;
+    if results.is_empty() {
+        return Err(AppError::Cache(format!("no results for \"{city}\"")));
+    }
+
+    let choice = if results.len() == 1 {
+        &results[0]
+    } else {
+        display::print_city_results(&results);
+        println!(
+            "{}",
+            "Enter number to select (1-5) or press Enter for first:".bright_blue()
+        );
+        let mut input = String::new();
+        std::io::stdin().read_line(&mut input).ok();
+        let idx: usize = input.trim().parse::<usize>().unwrap_or(1).saturating_sub(1);
+        results.get(idx).unwrap_or(&results[0])
+    };
+
+    let label = match (&choice.country, &choice.admin1) {
+        (Some(c), Some(a)) => format!("{}, {}, {}", choice.name, a, c),
+        (Some(c), None) => format!("{}, {}", choice.name, c),
+        _ => choice.name.clone(),
+    };
+    println!("{} {}", "Selected:".bright_blue(), label);
+
+    let mut cache = Cache::load();
+    if json {
+        let cache_key = format!(
+            "{}_{}_{}",
+            choice.latitude,
+            choice.longitude,
+            mode_suffix(forecast)
+        );
+        if let Some(data) = cache.get_valid(&cache_key) {
+            println!("{}", serde_json::to_string_pretty(data)?);
+        } else if forecast {
+            let data = api::fetch_forecast(choice.latitude, choice.longitude).await?;
+            println!("{}", serde_json::to_string_pretty(&data)?);
+            cache.insert(
+                &cache_key,
+                crate::models::ReturnedData::Daily(Box::new(data)),
+            );
+        } else {
+            let data = api::fetch_current(choice.latitude, choice.longitude).await?;
+            println!("{}", serde_json::to_string_pretty(&data)?);
+            cache.insert(
+                &cache_key,
+                crate::models::ReturnedData::Current(Box::new(data)),
+            );
+        }
+        Ok(())
+    } else if let Some(h) = hourly {
+        handle_hourly_with_cache(choice.latitude, choice.longitude, h, &mut cache).await
+    } else {
+        handle_direct_with_cache(choice.latitude, choice.longitude, forecast, &mut cache).await
+    }
+}
+
+/// Fetch and display hourly forecast.
+pub async fn handle_hourly(lat: f64, lon: f64, days: u32) -> AppResult<()> {
+    validate_coords(lat, lon)?;
+    let mut cache = Cache::load();
+    handle_hourly_with_cache(lat, lon, days, &mut cache).await
+}
+
+async fn handle_hourly_with_cache(
+    lat: f64,
+    lon: f64,
+    days: u32,
+    cache: &mut Cache,
+) -> AppResult<()> {
+    let cache_key = format!("{lat}_{lon}_hourly_{days}");
+
+    if let Some(data) = cache.get_valid(&cache_key) {
+        if let Some(hourly) = data.as_hourly() {
+            display::pretty_print_hourly(hourly);
+            return Ok(());
+        }
+    }
+
+    let data = api::fetch_hourly(lat, lon, days).await?;
+    display::pretty_print_hourly(&data);
+    cache.insert(
+        &cache_key,
+        crate::models::ReturnedData::Hourly(Box::new(data)),
+    );
     Ok(())
 }
 
@@ -229,7 +359,12 @@ mod tests {
             elevation: 0.0,
             current_units: crate::models::CurrentUnits {
                 temperature_2m: "°C".into(),
+                apparent_temperature: "°C".into(),
+                relative_humidity_2m: "%".into(),
+                surface_pressure: "hPa".into(),
                 wind_speed_10m: "km/h".into(),
+                uv_index: "".into(),
+                weather_code: "".into(),
                 rain: "mm".into(),
                 snowfall: "cm".into(),
                 precipitation: "mm".into(),
@@ -237,7 +372,12 @@ mod tests {
             current: crate::models::Current {
                 time: "2025-01-01T00:00".into(),
                 temperature_2m: 10.0,
+                apparent_temperature: 8.0,
+                relative_humidity_2m: 70.0,
+                surface_pressure: 1013.0,
                 wind_speed_10m: 5.0,
+                uv_index: 0.0,
+                weather_code: 0,
                 rain: 0.0,
                 snowfall: 0.0,
                 precipitation: 0.0,

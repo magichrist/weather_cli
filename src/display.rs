@@ -1,4 +1,6 @@
-use crate::models::{WeatherDaily, WeatherResponse};
+use crate::models::{
+    CityResult, WeatherDaily, WeatherHourly, WeatherResponse, weather_code_to_text,
+};
 use colored::Colorize;
 use std::fmt::Write as _;
 use std::io::Write;
@@ -103,6 +105,13 @@ pub fn pretty_print_weather(data: &WeatherResponse) {
     writeln!(out, "  {} {}", "Time:".bright_blue(), data.current.time).ok();
     writeln!(
         out,
+        "  {} {}",
+        "Condition:".bright_blue(),
+        weather_code_to_text(data.current.weather_code)
+    )
+    .ok();
+    writeln!(
+        out,
         "  {} {} {}",
         "Temperature:".bright_red(),
         data.current.temperature_2m,
@@ -112,9 +121,41 @@ pub fn pretty_print_weather(data: &WeatherResponse) {
     writeln!(
         out,
         "  {} {} {}",
+        "Feels like:".bright_red(),
+        data.current.apparent_temperature,
+        data.current_units.apparent_temperature
+    )
+    .ok();
+    writeln!(
+        out,
+        "  {} {} {}",
+        "Humidity:".bright_blue(),
+        data.current.relative_humidity_2m,
+        data.current_units.relative_humidity_2m
+    )
+    .ok();
+    writeln!(
+        out,
+        "  {} {} {}",
+        "Pressure:".bright_blue(),
+        data.current.surface_pressure,
+        data.current_units.surface_pressure
+    )
+    .ok();
+    writeln!(
+        out,
+        "  {} {} {}",
         "Wind Speed:".bright_green(),
         data.current.wind_speed_10m,
         data.current_units.wind_speed_10m
+    )
+    .ok();
+    writeln!(
+        out,
+        "  {} {:.1} {}",
+        "UV Index:".purple(),
+        data.current.uv_index,
+        data.current_units.uv_index
     )
     .ok();
     writeln!(
@@ -141,6 +182,75 @@ pub fn pretty_print_weather(data: &WeatherResponse) {
         data.current_units.precipitation
     )
     .ok();
+
+    print!("{out}");
+    let _ = std::io::stdout().flush();
+}
+
+/// Print city search results for user disambiguation.
+pub fn print_city_results(results: &[CityResult]) {
+    let mut out = String::new();
+    writeln!(out, "{}", "City Search Results:".green()).ok();
+    for (i, r) in results.iter().enumerate() {
+        let location = match (&r.country, &r.admin1) {
+            (Some(c), Some(a)) => format!("{}, {}", a, c),
+            (Some(c), None) => c.clone(),
+            _ => String::new(),
+        };
+        writeln!(
+            out,
+            "  {}. {} {} ({:.4}, {:.4})",
+            (i + 1).to_string().bright_blue(),
+            r.name.yellow(),
+            location.dimmed(),
+            r.latitude,
+            r.longitude,
+        )
+        .ok();
+    }
+    print!("{out}");
+    let _ = std::io::stdout().flush();
+}
+
+/// Print hourly forecast table.
+pub fn pretty_print_hourly(data: &WeatherHourly) {
+    let mut out = String::new();
+
+    writeln!(out, "{}", "Hourly Forecast:".green()).ok();
+    writeln!(
+        out,
+        "  {} {}, {}",
+        "Location:".bright_blue(),
+        data.latitude,
+        data.longitude
+    )
+    .ok();
+    writeln!(out).ok();
+
+    writeln!(
+        out,
+        "{:<20} {:<10} {:<12} {:<10}",
+        "Time".yellow(),
+        "Temp °C".bright_red(),
+        "Precip %".bright_blue(),
+        "Condition".bright_green(),
+    )
+    .ok();
+
+    for i in 0..data.hourly.time.len() {
+        let time_str = &data.hourly.time[i];
+        let short_time = time_str.get(11..16).unwrap_or(time_str);
+        let condition = weather_code_to_text(data.hourly.weather_code[i]);
+        writeln!(
+            out,
+            "{:<20} {:<10.1} {:<12} {:<10}",
+            short_time.bright_white(),
+            data.hourly.temperature_2m[i],
+            data.hourly.precipitation_probability[i],
+            condition,
+        )
+        .ok();
+    }
 
     print!("{out}");
     let _ = std::io::stdout().flush();

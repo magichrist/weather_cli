@@ -54,7 +54,12 @@ pub struct Daily {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct CurrentUnits {
     pub temperature_2m: String,
+    pub apparent_temperature: String,
+    pub relative_humidity_2m: String,
+    pub surface_pressure: String,
     pub wind_speed_10m: String,
+    pub uv_index: String,
+    pub weather_code: String,
     pub rain: String,
     pub snowfall: String,
     pub precipitation: String,
@@ -64,7 +69,12 @@ pub struct CurrentUnits {
 pub struct Current {
     pub time: String,
     pub temperature_2m: f64,
+    pub apparent_temperature: f64,
+    pub relative_humidity_2m: f64,
+    pub surface_pressure: f64,
     pub wind_speed_10m: f64,
+    pub uv_index: f64,
+    pub weather_code: u32,
     pub rain: f64,
     pub snowfall: f64,
     pub precipitation: f64,
@@ -82,7 +92,22 @@ pub struct Location {
 pub enum ReturnedData {
     Daily(Box<WeatherDaily>),
     Current(Box<WeatherResponse>),
+    Hourly(Box<WeatherHourly>),
     Location(Box<Location>),
+}
+
+/// Geocoding search result.
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct CityResult {
+    pub name: String,
+    pub latitude: f64,
+    pub longitude: f64,
+    #[serde(default)]
+    pub country: Option<String>,
+    #[serde(default)]
+    pub admin1: Option<String>,
+    #[serde(default)]
+    pub elevation: Option<f64>,
 }
 
 impl ReturnedData {
@@ -109,6 +134,77 @@ impl ReturnedData {
             None
         }
     }
+
+    pub fn as_hourly(&self) -> Option<&WeatherHourly> {
+        if let Self::Hourly(h) = self {
+            Some(h)
+        } else {
+            None
+        }
+    }
+}
+
+/// Hourly forecast response.
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct WeatherHourly {
+    pub latitude: f64,
+    pub longitude: f64,
+    pub generationtime_ms: f64,
+    pub timezone: String,
+    pub timezone_abbreviation: String,
+    pub elevation: f64,
+    pub hourly_units: HourlyUnits,
+    pub hourly: Hourly,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct HourlyUnits {
+    pub time: String,
+    pub temperature_2m: String,
+    pub precipitation_probability: String,
+    pub weather_code: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct Hourly {
+    pub time: Vec<String>,
+    pub temperature_2m: Vec<f64>,
+    pub precipitation_probability: Vec<u32>,
+    pub weather_code: Vec<u32>,
+}
+
+/// Map a WMO weather code to a human-readable description.
+pub fn weather_code_to_text(code: u32) -> &'static str {
+    match code {
+        0 => "Clear sky",
+        1 => "Mainly clear",
+        2 => "Partly cloudy",
+        3 => "Overcast",
+        45 | 48 => "Fog",
+        51 => "Light drizzle",
+        53 => "Moderate drizzle",
+        55 => "Dense drizzle",
+        56 => "Light freezing drizzle",
+        57 => "Dense freezing drizzle",
+        61 => "Slight rain",
+        63 => "Moderate rain",
+        65 => "Heavy rain",
+        66 => "Light freezing rain",
+        67 => "Heavy freezing rain",
+        71 => "Slight snowfall",
+        73 => "Moderate snowfall",
+        75 => "Heavy snowfall",
+        77 => "Snow grains",
+        80 => "Slight rain showers",
+        81 => "Moderate rain showers",
+        82 => "Violent rain showers",
+        85 => "Slight snow showers",
+        86 => "Heavy snow showers",
+        95 => "Thunderstorm",
+        96 => "Thunderstorm with slight hail",
+        99 => "Thunderstorm with heavy hail",
+        _ => "Unknown",
+    }
 }
 
 #[cfg(test)]
@@ -126,7 +222,12 @@ mod tests {
             "elevation": 35.0,
             "current_units": {
                 "temperature_2m": "°C",
+                "apparent_temperature": "°C",
+                "relative_humidity_2m": "%",
+                "surface_pressure": "hPa",
                 "wind_speed_10m": "km/h",
+                "uv_index": "",
+                "weather_code": "",
                 "rain": "mm",
                 "snowfall": "cm",
                 "precipitation": "mm"
@@ -134,7 +235,12 @@ mod tests {
             "current": {
                 "time": "2025-07-26T12:00",
                 "temperature_2m": 22.5,
+                "apparent_temperature": 21.0,
+                "relative_humidity_2m": 65.0,
+                "surface_pressure": 1013.0,
                 "wind_speed_10m": 12.3,
+                "uv_index": 5.0,
+                "weather_code": 1,
                 "rain": 0.0,
                 "snowfall": 0.0,
                 "precipitation": 0.0
@@ -143,6 +249,8 @@ mod tests {
         let resp: WeatherResponse = serde_json::from_str(json).unwrap();
         assert!((resp.latitude - 48.86).abs() < 0.01);
         assert!((resp.current.temperature_2m - 22.5).abs() < 0.01);
+        assert!((resp.current.apparent_temperature - 21.0).abs() < 0.01);
+        assert_eq!(resp.current.weather_code, 1);
         assert_eq!(resp.timezone, "GMT");
     }
 
@@ -199,9 +307,58 @@ mod tests {
         assert!(data.as_location().is_some());
         assert!(data.as_daily().is_none());
         assert!(data.as_current().is_none());
+        assert!(data.as_hourly().is_none());
 
         let serialized = serde_json::to_string(&data).unwrap();
         let deserialized: ReturnedData = serde_json::from_str(&serialized).unwrap();
         assert!((deserialized.as_location().unwrap().lat - 40.71).abs() < 0.01);
+    }
+
+    #[test]
+    fn deserialize_hourly() {
+        let json = r#"{
+            "latitude": 48.86,
+            "longitude": 2.35,
+            "generationtime_ms": 0.5,
+            "timezone": "GMT",
+            "timezone_abbreviation": "GMT",
+            "elevation": 35.0,
+            "hourly_units": {
+                "time": "iso8601",
+                "temperature_2m": "°C",
+                "precipitation_probability": "%",
+                "weather_code": ""
+            },
+            "hourly": {
+                "time": ["2025-07-26T00:00", "2025-07-26T01:00"],
+                "temperature_2m": [20.0, 19.5],
+                "precipitation_probability": [10, 25],
+                "weather_code": [0, 2]
+            }
+        }"#;
+        let resp: WeatherHourly = serde_json::from_str(json).unwrap();
+        assert_eq!(resp.hourly.time.len(), 2);
+        assert!((resp.hourly.temperature_2m[0] - 20.0).abs() < 0.01);
+        assert_eq!(resp.hourly.precipitation_probability[1], 25);
+        assert_eq!(resp.hourly.weather_code[0], 0);
+    }
+
+    #[test]
+    fn deserialize_city_result() {
+        let json = r#"{"name": "Paris", "latitude": 48.8566, "longitude": 2.3522, "country": "France", "admin1": "Ile-de-France"}"#;
+        let city: CityResult = serde_json::from_str(json).unwrap();
+        assert_eq!(city.name, "Paris");
+        assert_eq!(city.country, Some("France".into()));
+        assert_eq!(city.admin1, Some("Ile-de-France".into()));
+    }
+
+    #[test]
+    fn weather_code_mapping() {
+        assert_eq!(weather_code_to_text(0), "Clear sky");
+        assert_eq!(weather_code_to_text(3), "Overcast");
+        assert_eq!(weather_code_to_text(45), "Fog");
+        assert_eq!(weather_code_to_text(61), "Slight rain");
+        assert_eq!(weather_code_to_text(95), "Thunderstorm");
+        assert_eq!(weather_code_to_text(999), "Unknown");
     }
 }
