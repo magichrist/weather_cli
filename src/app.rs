@@ -169,10 +169,14 @@ pub async fn handle_city_search(
         (Some(c), None) => format!("{}, {}", choice.name, c),
         _ => choice.name.clone(),
     };
-    println!("{} {}", "Selected:".bright_blue(), label);
+    if !json {
+        println!("{} {}", "Selected:".bright_blue(), label);
+    }
 
     let mut cache = Cache::load();
-    if json {
+    if let Some(h) = hourly {
+        handle_hourly_with_cache(choice.latitude, choice.longitude, h, json, &mut cache).await
+    } else if json {
         let cache_key = format!(
             "{}_{}_{}",
             choice.latitude,
@@ -197,8 +201,6 @@ pub async fn handle_city_search(
             );
         }
         Ok(())
-    } else if let Some(h) = hourly {
-        handle_hourly_with_cache(choice.latitude, choice.longitude, h, json, &mut cache).await
     } else {
         handle_direct_with_cache(choice.latitude, choice.longitude, forecast, &mut cache).await
     }
