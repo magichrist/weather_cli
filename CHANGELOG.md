@@ -6,6 +6,33 @@ All notable changes to this project.
 
 
 
+- 28636ca docs: update README with features section and bug fixes
+
+- d2ba265 feat: city search, enhanced weather, hourly forecast, JSON output, cache fixes
+
+- City name search via Open-Meteo Geocoding API (-s/--search)
+- Enhanced current weather: humidity, UV index, pressure, feels-like, condition text
+- WMO weather code to human-readable text mapping
+- Hourly forecast (--hourly [DAYS], default 3)
+- JSON output mode (--json) for scripting
+- Fix --json --ml and --ml --hourly (dispatch now resolves coords from any source)
+- Fix --json bypassing cache (now checks and stores cache)
+- 23 tests passing, clippy clean
+
+- 103e38b fix: --hourly --json now returns JSON; add Rust cache to CodeQL workflow
+
+- handle_hourly now accepts json flag for JSON output
+- Rust cache added to codeql.yml to avoid recompiling on every run
+
+- 0b137c6 fix: city search --hourly --json now returns hourly JSON
+
+- In handle_city_search, check hourly before json to avoid early return
+- Suppress 'Selected:' label when --json is set to keep output clean
+
+## v0.4.0 - 2026-07-26
+
+
+
 - 94f40df not expected behaviour from cliff; fixed
 
 - c9316e7 workflow update
@@ -32,6 +59,17 @@ All notable changes to this project.
 
 - 676e0d7 COMPLETE REFACTOR
 
+- 99bf6de fix: address 8 bugs found by bug hunter audit
+
+- BUG-001: Add 15s HTTP request timeout via shared reqwest::Client
+- BUG-002: parse_coords now shows actual invalid input in error
+- BUG-003: Switch IP geolocation to HTTPS
+- BUG-004: Guard depict_forecast against empty daily data
+- BUG-005: Cache::persist logs write errors via debug!()
+- BUG-006: Cache::load logs parse/read errors via debug!()
+- BUG-007: Remove dead Display impl for WeatherResponse
+- BUG-008: Eliminate double Cache::load in --ml path
+
 - 1d5413a fix: address 8 bugs found by bug hunter audit
 
 - BUG-001: Add 15s HTTP request timeout via shared reqwest::Client
@@ -42,6 +80,8 @@ All notable changes to this project.
 - BUG-006: Cache::load logs parse/read errors via debug!()
 - BUG-007: Remove dead Display impl for WeatherResponse
 - BUG-008: Eliminate double Cache::load in --ml path
+
+- 11ca126 Merge remote-tracking branch 'refs/remotes/origin/main'
 
 ## v0.3.0 - 2026-06-26
 
