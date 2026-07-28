@@ -198,36 +198,45 @@ pub async fn handle_city_search(
         }
         Ok(())
     } else if let Some(h) = hourly {
-        handle_hourly_with_cache(choice.latitude, choice.longitude, h, &mut cache).await
+        handle_hourly_with_cache(choice.latitude, choice.longitude, h, json, &mut cache).await
     } else {
         handle_direct_with_cache(choice.latitude, choice.longitude, forecast, &mut cache).await
     }
 }
 
 /// Fetch and display hourly forecast.
-pub async fn handle_hourly(lat: f64, lon: f64, days: u32) -> AppResult<()> {
+pub async fn handle_hourly(lat: f64, lon: f64, days: u32, json: bool) -> AppResult<()> {
     validate_coords(lat, lon)?;
     let mut cache = Cache::load();
-    handle_hourly_with_cache(lat, lon, days, &mut cache).await
+    handle_hourly_with_cache(lat, lon, days, json, &mut cache).await
 }
 
 async fn handle_hourly_with_cache(
     lat: f64,
     lon: f64,
     days: u32,
+    json: bool,
     cache: &mut Cache,
 ) -> AppResult<()> {
     let cache_key = format!("{lat}_{lon}_hourly_{days}");
 
     if let Some(data) = cache.get_valid(&cache_key) {
         if let Some(hourly) = data.as_hourly() {
-            display::pretty_print_hourly(hourly);
+            if json {
+                println!("{}", serde_json::to_string_pretty(hourly)?);
+            } else {
+                display::pretty_print_hourly(hourly);
+            }
             return Ok(());
         }
     }
 
     let data = api::fetch_hourly(lat, lon, days).await?;
-    display::pretty_print_hourly(&data);
+    if json {
+        println!("{}", serde_json::to_string_pretty(&data)?);
+    } else {
+        display::pretty_print_hourly(&data);
+    }
     cache.insert(
         &cache_key,
         crate::models::ReturnedData::Hourly(Box::new(data)),

@@ -39,6 +39,9 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Cache Rust build artifacts
+        uses: Swatinem/rust-cache@v2
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:

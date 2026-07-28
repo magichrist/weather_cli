@@ -82,7 +82,7 @@ async fn run(args: Args) -> error::AppResult<()> {
         app::handle_city_search(city, args.forecast, args.hourly, args.json).await?;
     } else if let Some(days) = args.hourly {
         let (lat, lon) = resolve_coords(args.a, args.b, args.ml).await?;
-        app::handle_hourly(lat, lon, days).await?;
+        app::handle_hourly(lat, lon, days, args.json).await?;
     } else if args.json {
         let (lat, lon) = resolve_coords(args.a, args.b, args.ml).await?;
         app::handle_json(lat, lon, args.forecast).await?;
